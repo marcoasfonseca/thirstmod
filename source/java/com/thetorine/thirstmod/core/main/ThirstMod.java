@@ -2,27 +2,32 @@ package com.thetorine.thirstmod.core.main;
 
 import java.io.File;
 
-import com.thetorine.thirstmod.core.content.BlockLoader;
-import com.thetorine.thirstmod.core.content.ItemLoader;
-import com.thetorine.thirstmod.core.content.packs.ContentLoader;
-import com.thetorine.thirstmod.core.content.packs.DrinkRegistry;
-import com.thetorine.thirstmod.core.network.*;
-import com.thetorine.thirstmod.core.player.PlayerContainer;
-import com.thetorine.thirstmod.core.utils.Config;
-import com.thetorine.thirstmod.core.utils.Constants;
-
-import cpw.mods.fml.common.Mod;
-import cpw.mods.fml.common.Mod.EventHandler;
-import cpw.mods.fml.common.Mod.Instance;
-import cpw.mods.fml.common.event.*;
-import cpw.mods.fml.common.network.*;
-import cpw.mods.fml.common.*;
-import cpw.mods.fml.relauncher.Side;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
-import net.minecraftforge.common.*;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.Mod.EventHandler;
+import net.minecraftforge.fml.common.Mod.Instance;
+import net.minecraftforge.fml.common.SidedProxy;
+import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLServerStoppedEvent;
+import net.minecraftforge.fml.common.network.NetworkRegistry;
+import net.minecraftforge.fml.relauncher.Side;
+
+import com.thetorine.thirstmod.core.content.BlockLoader;
+import com.thetorine.thirstmod.core.content.ItemDrink;
+import com.thetorine.thirstmod.core.content.ItemLoader;
+import com.thetorine.thirstmod.core.content.packs.ContentLoader;
+import com.thetorine.thirstmod.core.content.packs.DrinkRegistry;
+import com.thetorine.thirstmod.core.network.NetworkHandler;
+import com.thetorine.thirstmod.core.player.PlayerContainer;
+import com.thetorine.thirstmod.core.utils.Config;
+import com.thetorine.thirstmod.core.utils.Constants;
 
 @Mod(modid = Constants.MODID, version = Constants.VERSION)
 public class ThirstMod {
@@ -45,6 +50,7 @@ public class ThirstMod {
 	@EventHandler
 	public void postInit(FMLPostInitializationEvent event) {
 		new DrinkRegistry();
+		renderIcons();
 	}
 	
 	@EventHandler
@@ -59,6 +65,22 @@ public class ThirstMod {
 		new BlockLoader();
 		new ItemLoader(); 
 		new ContentLoader();
+	}
+	
+	private void renderIcons() {
+		for(Item item : ItemLoader.ALL_ITEMS) {
+			if(item.getHasSubtypes()) {
+				for(int i = 0; i < 11; i++) {
+					Minecraft.getMinecraft().getRenderItem().getItemModelMesher().register(item, i, new ModelResourceLocation("thirstmod:canteen", "inventory"));
+				}
+			} else {
+				if(item instanceof ItemDrink) {
+					Minecraft.getMinecraft().getRenderItem().getItemModelMesher().register(item, 0, new ModelResourceLocation("thirstmod:content_drink", "inventory"));
+				} else {
+					Minecraft.getMinecraft().getRenderItem().getItemModelMesher().register(item, 0, new ModelResourceLocation("thirstmod:" + item.getUnlocalizedName().replaceAll("item.", "").replaceAll("tile.", ""), "inventory"));
+				}
+			}
+		}
 	}
 	
 	public static String getMinecraftDir() {

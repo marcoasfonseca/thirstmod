@@ -1,14 +1,22 @@
 package com.thetorine.thirstmod.core.content.packs;
 
-import java.io.*;
-import java.net.*;
-import java.util.*;
-import java.util.zip.*;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.zip.ZipFile;
+
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraftforge.fml.common.registry.GameData;
 
 import com.thetorine.thirstmod.core.main.ThirstMod;
-
-import cpw.mods.fml.common.registry.GameData;
-import net.minecraft.item.*;
 
 public class DrinkRegistry {
 
@@ -100,13 +108,11 @@ public class DrinkRegistry {
 	}
 
 	public void createDrinks(File file) throws Exception {
-		if (!file.exists()) {
-			BufferedWriter writer = new BufferedWriter(new FileWriter(file));
-			writer.write("mushroom_stew 7 1.2\n");
-			writer.write("milk_bucket 8 3.4\n");
-			writer.write("potion 3 1.4 true 0.4 0");
-			writer.close();
-		}
+		BufferedWriter writer = new BufferedWriter(new FileWriter(file));
+		writer.write("minecraft:mushroom_stew 7 1.2\n");
+		writer.write("minecraft:milk_bucket 8 3.4\n");
+		writer.write("minecraft:potion 3 1.4 true 0.4 0");
+		writer.close();
 	}
 
 	public void createInstructions(File file) throws Exception {

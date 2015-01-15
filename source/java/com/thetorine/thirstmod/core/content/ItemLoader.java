@@ -1,20 +1,23 @@
 package com.thetorine.thirstmod.core.content;
 
-import com.thetorine.thirstmod.core.content.blocks.RCRecipes;
-import com.thetorine.thirstmod.core.main.ThirstMod;
-import com.thetorine.thirstmod.core.utils.Constants;
+import java.util.ArrayList;
 
-import cpw.mods.fml.common.registry.GameRegistry;
+import net.minecraft.client.resources.model.ModelBakery;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraftforge.fml.common.registry.GameRegistry;
+
+import com.thetorine.thirstmod.core.content.blocks.RCRecipes;
+import com.thetorine.thirstmod.core.main.ThirstMod;
+import com.thetorine.thirstmod.core.utils.Constants;
 
 public class ItemLoader {
-	public static Item gold_coin = new Item().setCreativeTab(ThirstMod.thirst).setUnlocalizedName("gold_coin").setTextureName("thirstmod:coin_gold");
-	public static Item filter = new ItemFilter(0).setCreativeTab(ThirstMod.thirst).setUnlocalizedName("filter").setTextureName("thirstmod:filter");
-	public static Item dirty_filter = new ItemFilter(1).setCreativeTab(ThirstMod.thirst).setUnlocalizedName("dirty_filter").setTextureName("thirstmod:dirty_filter");
-	public static Item charcoal_filter = new ItemFilter(2).setCreativeTab(ThirstMod.thirst).setUnlocalizedName("charcoal_filter").setTextureName("thirstmod:coal_filter");
+	public static Item gold_coin = new Item().setCreativeTab(ThirstMod.thirst).setUnlocalizedName("gold_coin");
+	public static Item filter = new ItemFilter(0).setCreativeTab(ThirstMod.thirst).setUnlocalizedName("filter");
+	public static Item dirty_filter = new ItemFilter(1).setCreativeTab(ThirstMod.thirst).setUnlocalizedName("dirty_filter");
+	public static Item charcoal_filter = new ItemFilter(2).setCreativeTab(ThirstMod.thirst).setUnlocalizedName("charcoal_filter");
 	
 	public static Item cup = new ItemInternalDrink("thirstmod:cup").setUnlocalizedName("cup");
 	public static Item water_cup = new ItemInternalDrink(3, 1.2f, 0.3f, "thirstmod:water", 0).setUnlocalizedName("water_cup");
@@ -26,19 +29,21 @@ public class ItemLoader {
 	public static Item fresh_water_bucket = new ItemInternalDrink(10, 4f, 0f, "thirstmod:clean_bucket", 1).setReturnItem(Items.bucket).setUnlocalizedName("clean_bucket");
 	public static Item canteen = new ItemCanteen().setCreativeTab(ThirstMod.thirst).setUnlocalizedName("canteen");
 	
+	public static final ArrayList<Item> ALL_ITEMS = new ArrayList<>();
+	
 	public ItemLoader() {
-		registerItem(gold_coin);
-		registerItem(filter);
-		registerItem(dirty_filter);
-		registerItem(charcoal_filter);
-		registerItem(cup);
-		registerItem(water_cup);
-		registerItem(filtered_water_cup);
-		registerItem(fresh_water);
-		registerItem(milk);
-		registerItem(chocolate_milk);
-		registerItem(fresh_water_bucket);
-		registerItem(canteen);
+		registerItem(gold_coin, true);
+		registerItem(filter, true);
+		registerItem(dirty_filter, true);
+		registerItem(charcoal_filter, true);
+		registerItem(cup, true);
+		registerItem(water_cup, true);
+		registerItem(filtered_water_cup, true);
+		registerItem(fresh_water, false);
+		registerItem(milk, false);
+		registerItem(chocolate_milk, false);
+		registerItem(fresh_water_bucket, true);
+		registerItem(canteen, true);
 		
 		GameRegistry.addSmelting(Items.potionitem, new ItemStack(fresh_water, 1), 0.3f);
 		GameRegistry.addSmelting(Items.water_bucket, new ItemStack(fresh_water_bucket, 1), 0.4f);
@@ -65,8 +70,13 @@ public class ItemLoader {
 		RCRecipes.addRecipe(canteen, 175, new ItemStack(canteen, 1, 10));
 	}
 	
-	private void registerItem(Item i) {
+	private void registerItem(Item i, boolean add) {
 		String name = i.getUnlocalizedName().replace("item.", "");
 		GameRegistry.registerItem(i, name);
+		ALL_ITEMS.add(i);
+		
+		if(!add) {
+			ModelBakery.addVariantName(i, "thirstmod:content_drink");
+		}
 	}
 }

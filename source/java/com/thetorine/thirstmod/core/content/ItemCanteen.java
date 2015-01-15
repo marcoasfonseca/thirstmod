@@ -2,37 +2,44 @@ package com.thetorine.thirstmod.core.content;
 
 import java.util.List;
 
-import com.thetorine.thirstmod.core.client.player.ClientStats;
-import com.thetorine.thirstmod.core.main.ThirstMod;
-import com.thetorine.thirstmod.core.player.PlayerContainer;
-
 import net.minecraft.block.material.Material;
+import net.minecraft.client.resources.model.ModelBakery;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.EnumAction;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.BlockPos;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.world.World;
-import cpw.mods.fml.common.FMLCommonHandler;
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
+import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
+
+import com.thetorine.thirstmod.core.client.player.ClientStats;
+import com.thetorine.thirstmod.core.main.ThirstMod;
+import com.thetorine.thirstmod.core.player.PlayerContainer;
 
 public class ItemCanteen extends Item {
-	private String[] canteenNames = { "canteen_0", "canteen_1", "canteen_2", "canteen_3", "canteen_4", "canteen_5", "canteen_6", "canteen_7", "canteen_8", "canteen_9", "canteen_10", };
+	private String[] canteenNames = { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10" };
 
 	public ItemCanteen() {
 		super();
 		setMaxStackSize(1);
 		setMaxDamage(0);
 		setHasSubtypes(true);
-		setTextureName("thirstmod:canteen");
 		setCreativeTab(ThirstMod.thirst);
+		
+		String[] names = new String[canteenNames.length];
+		for(int i = 0; i < names.length; i++) {
+			names[i] = "thirstmod:canteen";
+		}
+		ModelBakery.addVariantName(this, names);
 	}
 
 	@Override
 	public String getUnlocalizedName(ItemStack stack) {
-		return canteenNames[stack.getItemDamage()];
+		return "item.canteen." + canteenNames[stack.getItemDamage()];
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
@@ -45,13 +52,13 @@ public class ItemCanteen extends Item {
 	}
 
 	@Override
-	public ItemStack onEaten(ItemStack itemstack, World world, EntityPlayer player) {
+	public ItemStack onItemUseFinish(ItemStack itemstack, World world, EntityPlayer player) {
 		if (!world.isRemote) {
-			PlayerContainer playerT = PlayerContainer.getPlayer(player.getDisplayName());
+			PlayerContainer playerT = PlayerContainer.getPlayer(player.getDisplayNameString());
 			if (itemstack.getItemDamage() > 0) {
 				playerT.getStats().addStats((itemstack.getItemDamage() < 6 ? 2 : 3), 1.2F);
 				if ((itemstack.getItemDamage() <= 5) && (world.rand.nextFloat() < 0.4f)) {
-					PlayerContainer.getPlayer(player.getDisplayName()).getStats().poisonLogic.startPoison();
+					PlayerContainer.getPlayer(player.getDisplayNameString()).getStats().poisonLogic.startPoison();
 				}
 				return new ItemStack(this, 1, getDecrementedDamage(itemstack.getItemDamage()));
 			}
@@ -70,7 +77,7 @@ public class ItemCanteen extends Item {
 
 	@Override
 	public EnumAction getItemUseAction(ItemStack itemstack) {
-		return EnumAction.drink;
+		return EnumAction.DRINK;
 	}
 	
 	@SuppressWarnings({ "unchecked", "rawtypes" })
@@ -88,20 +95,20 @@ public class ItemCanteen extends Item {
 
 	@Override
 	public ItemStack onItemRightClick(ItemStack itemstack, World world, EntityPlayer player) {
-		PlayerContainer playerT = PlayerContainer.getPlayer(player.getDisplayName());
+		PlayerContainer playerT = PlayerContainer.getPlayer(player.getDisplayNameString());
 		MovingObjectPosition movingobjectposition = getMovingObjectPositionFromPlayer(world, player, true);
 		if (movingobjectposition == null) {
-			if ((itemstack.getItemDamage() > 0) && canDrink(player.getDisplayName())) {
+			if ((itemstack.getItemDamage() > 0) && canDrink(player.getDisplayNameString())) {
 				player.setItemInUse(itemstack, getMaxItemUseDuration(itemstack));
 			}
 			return itemstack;
 		}
 		if (movingobjectposition.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
-			int i = movingobjectposition.blockX;
-			int j = movingobjectposition.blockY;
-			int k = movingobjectposition.blockZ;
+			int i = (int) movingobjectposition.hitVec.xCoord;
+			int j = (int) movingobjectposition.hitVec.yCoord;
+			int k = (int) movingobjectposition.hitVec.zCoord;
 			if(FMLCommonHandler.instance().getEffectiveSide() == Side.SERVER) {
-				if (world.getBlock(i, j, k).getMaterial() == Material.water) {
+				if (world.getBlockState(new BlockPos(i, j, k)).getBlock().getMaterial() == Material.water) {
 					if (itemstack.getItemDamage() < 5) { return new ItemStack(this, 1, 5); }
 				} else if ((itemstack.getItemDamage() > 0) && (playerT.getStats().thirstLevel < 20)) {
 					player.setItemInUse(itemstack, getMaxItemUseDuration(itemstack));

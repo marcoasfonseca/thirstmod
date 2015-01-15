@@ -1,16 +1,18 @@
 package com.thetorine.thirstmod.core.player;
 
+import net.minecraft.block.material.Material;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.potion.Potion;
+import net.minecraft.potion.PotionEffect;
+
 import com.thetorine.thirstmod.core.content.temperature.Temperature;
 import com.thetorine.thirstmod.core.main.ThirstMod;
 import com.thetorine.thirstmod.core.network.NetworkHandler;
 import com.thetorine.thirstmod.core.network.PacketUpdateClient;
 import com.thetorine.thirstmod.core.utils.Config;
 import com.thetorine.thirstmod.core.utils.Constants;
-
-import net.minecraft.block.material.Material;
-import net.minecraft.entity.player.*;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.potion.*;
 
 public class ThirstLogic {
 	public EntityPlayer player;
@@ -19,6 +21,7 @@ public class ThirstLogic {
 	public float thirstExhaustion;
 	public int movementSpeed; 
 	public int timer; 
+	public boolean natRegen = true;
 	
 	private Config config = ThirstMod.config;
 	public PoisonLogic poisonLogic = new PoisonLogic();
@@ -30,12 +33,13 @@ public class ThirstLogic {
 		this.thirstSaturation = Constants.MAX_SATURATION;
 		this.player = player;
 		this.temperature = new Temperature(player);
+		this.natRegen = player.worldObj.getGameRules().getGameRuleBooleanValue("naturalRegeneration");
 		
 		readData();
 	}
 	
 	public void onTick( ) {
-		int difSet = ThirstMod.config.PEACEFUL_ON ? 1 : getDifficulty(player);
+		int difSet = ThirstMod.config.PEACEFUL_ON ? 1 : player.worldObj.getDifficulty().getDifficultyId();
 		if (thirstExhaustion > 5f) {
 			thirstExhaustion = 0f;
 			if (thirstSaturation > 0f) {
@@ -50,13 +54,16 @@ public class ThirstLogic {
 			if (thirstLevel <= 0) {
 				timer++;
 				if (timer > 200) {
-					if ((player.getHealth() > 10) || (player.getHealth() > (ThirstMod.config.DEATH_FROM_THIRST ? 0 : 1) && difSet >= 2)) {
+					if ((player.getHealth() > 10) || (player.getHealth() > (ThirstMod.config.DEATH_FROM_THIRST ? 0 : (difSet == 3 ? 0 : 1)) && difSet >= 2)) {
 						//alt to attackEntityFrom(DamageSource, Float) which was not working
 						player.setHealth(player.getHealth()-1f); 
 						player.addPotionEffect(new PotionEffect(Potion.confusion.id, 15 * 20, 1));
+						player.worldObj.getGameRules().setOrCreateGameRule("naturalRegeneration", "false");
 						timer = 0;
 					}
 				}
+			} else {
+				player.worldObj.getGameRules().setOrCreateGameRule("naturalRegeneration", Boolean.toString(natRegen));
 			}
 		}
 		
@@ -68,7 +75,7 @@ public class ThirstLogic {
 			temperature.onTick();
 		}
 		
-		NetworkHandler.networkWrapper.sendTo(new PacketUpdateClient(thirstLevel, thirstSaturation, poisonLogic.isPoisoned(), temperature.airTemperture), (EntityPlayerMP) player);
+		NetworkHandler.networkWrapper.sendTo(new PacketUpdateClient(this), (EntityPlayerMP) player);
 	}
 	
 	public void readData() {
@@ -138,8 +145,8 @@ public class ThirstLogic {
 		return worldTime >= 13000;
 	}
 	
-	public static String getCurrentBiome(EntityPlayer entityplayer) {
-		return entityplayer.worldObj.getWorldChunkManager().getBiomeGenAt((int) entityplayer.posX, (int) entityplayer.posZ).biomeName;
+	public static String getCurrentBiome(EntityPlayer player) {
+		return player.worldObj.getBiomeGenForCoords(player.getPosition()).biomeName;
 	}
 	
 	public void addStats(int thirst, float sat) {
@@ -147,8 +154,8 @@ public class ThirstLogic {
 		thirstSaturation = Math.min(thirstSaturation + (thirst * sat * 2.0F), thirstLevel);
 	}
 	
-	public void addExhaustion(float par1) {
-		thirstExhaustion = Math.min(thirstExhaustion + par1, 40F);
+	public void addExhaustion(float exh) {
+		thirstExhaustion = Math.min(thirstExhaustion + exh, 40F);
 	}
 	
 	public void setStats(int level, float sat) {
@@ -159,15 +166,5 @@ public class ThirstLogic {
 	@Override
 	public String toString() {
 		return String.format("%s, Level = %d, Saturation = %f, Exhaustion = %f", player.getDisplayName(), thirstLevel, thirstSaturation, thirstExhaustion);
-	}
-	
-	public static int getDifficulty(EntityPlayer player) {
-		switch (player.worldObj.difficultySetting) {
-			case EASY: return 1;
-			case NORMAL: return 2;
-			case HARD: return 3;
-			case PEACEFUL: return 0;
-		}
-		return 0;
 	}
 }

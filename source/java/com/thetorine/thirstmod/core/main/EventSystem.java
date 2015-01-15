@@ -1,5 +1,30 @@
 package com.thetorine.thirstmod.core.main;
 
+import net.minecraft.client.Minecraft;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.BlockPos;
+import net.minecraft.util.ChatComponentText;
+import net.minecraft.world.World;
+import net.minecraftforge.client.GuiIngameForge;
+import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.event.entity.living.LivingHurtEvent;
+import net.minecraftforge.event.entity.player.AttackEntityEvent;
+import net.minecraftforge.event.entity.player.PlayerSleepInBedEvent;
+import net.minecraftforge.event.entity.player.PlayerUseItemEvent;
+import net.minecraftforge.event.world.BlockEvent;
+import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.common.eventhandler.Event.Result;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.PlayerEvent;
+import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
+import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedOutEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent.PlayerTickEvent;
+import net.minecraftforge.fml.common.network.IGuiHandler;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
+
 import org.lwjgl.input.Keyboard;
 
 import com.thetorine.thirstmod.core.client.gui.GuiDB;
@@ -14,31 +39,9 @@ import com.thetorine.thirstmod.core.content.blocks.TileEntityDB;
 import com.thetorine.thirstmod.core.content.blocks.TileEntityDS;
 import com.thetorine.thirstmod.core.content.blocks.TileEntityRC;
 import com.thetorine.thirstmod.core.content.packs.DrinkLists;
+import com.thetorine.thirstmod.core.content.packs.DrinkLists.Drink;
 import com.thetorine.thirstmod.core.player.PlayerContainer;
 import com.thetorine.thirstmod.core.utils.Constants;
-
-import net.minecraft.client.Minecraft;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.ChatComponentText;
-import net.minecraft.world.World;
-import net.minecraftforge.client.GuiIngameForge;
-import net.minecraftforge.client.event.RenderGameOverlayEvent;
-import net.minecraftforge.event.entity.living.LivingHurtEvent;
-import net.minecraftforge.event.entity.player.AttackEntityEvent;
-import net.minecraftforge.event.entity.player.PlayerSleepInBedEvent;
-import net.minecraftforge.event.entity.player.PlayerUseItemEvent;
-import net.minecraftforge.event.world.BlockEvent;
-import cpw.mods.fml.common.FMLCommonHandler;
-import cpw.mods.fml.common.eventhandler.*;
-import cpw.mods.fml.common.eventhandler.Event.Result;
-import cpw.mods.fml.common.gameevent.PlayerEvent;
-import cpw.mods.fml.common.gameevent.PlayerEvent.PlayerLoggedInEvent;
-import cpw.mods.fml.common.gameevent.PlayerEvent.PlayerLoggedOutEvent;
-import cpw.mods.fml.common.gameevent.TickEvent.*;
-import cpw.mods.fml.common.network.IGuiHandler;
-import cpw.mods.fml.relauncher.*;
 
 public class EventSystem implements IGuiHandler {
 	@SubscribeEvent
@@ -67,7 +70,7 @@ public class EventSystem implements IGuiHandler {
 	
 	@SubscribeEvent
 	public void onLogout(PlayerLoggedOutEvent event) {
-		PlayerContainer.ALL_PLAYERS.remove(event.player.getDisplayName());
+		PlayerContainer.ALL_PLAYERS.remove(event.player.getDisplayNameString());
 	}
 	
 	@SideOnly(Side.CLIENT)
@@ -105,7 +108,7 @@ public class EventSystem implements IGuiHandler {
 	
 	@SubscribeEvent
 	public void onAttack(AttackEntityEvent attack) {
-		PlayerContainer player = PlayerContainer.getPlayer(attack.entityPlayer.getDisplayName());
+		PlayerContainer player = PlayerContainer.getPlayer(attack.entityPlayer.getDisplayNameString());
 		if ((player != null) && (FMLCommonHandler.instance().getEffectiveSide() == Side.SERVER)) {
 			player.addExhaustion(0.5f);
 		}
@@ -115,7 +118,7 @@ public class EventSystem implements IGuiHandler {
 	public void onHurt(LivingHurtEvent hurt) {
 		if (hurt.entity instanceof EntityPlayer) {
 			EntityPlayer player = (EntityPlayer) hurt.entityLiving;
-			PlayerContainer.getPlayer(player.getDisplayName()).addExhaustion(0.4f);
+			PlayerContainer.getPlayer(player.getDisplayNameString()).addExhaustion(0.4f);
 		}
 	}
 
@@ -134,10 +137,10 @@ public class EventSystem implements IGuiHandler {
 	public void onFinishUsingItem(PlayerUseItemEvent.Finish event) {
 		if(FMLCommonHandler.instance().getEffectiveSide() == Side.SERVER) {
 			String id = event.item.getUnlocalizedName();
-			for(DrinkLists d: DrinkLists.extraList) {
+			for(Drink d: DrinkLists.EXTERNAL_DRINKS) {
 				String possibleID = d.item.getUnlocalizedName();
-				if(id.equals(possibleID)) {
-					PlayerContainer playCon = PlayerContainer.getPlayer(event.entityPlayer.getDisplayName());
+				if(id.equals(possibleID) && event.item.getItemDamage() == d.item.getItemDamage()) {
+					PlayerContainer playCon = PlayerContainer.getPlayer(event.entityPlayer.getDisplayNameString());
 					playCon.addStats(d.replenish, d.saturation);
 					break;
 				}
@@ -150,7 +153,7 @@ public class EventSystem implements IGuiHandler {
 		if(FMLCommonHandler.instance().getEffectiveSide() == Side.SERVER) {
 			if(event.wasDeath) {
 				EntityPlayer player = event.entityPlayer;
-				PlayerContainer.getPlayer(player.getDisplayName()).respawnPlayer();
+				PlayerContainer.getPlayer(player.getDisplayNameString()).respawnPlayer();
 			}
 		}
 	}
@@ -158,7 +161,7 @@ public class EventSystem implements IGuiHandler {
 	@SubscribeEvent
 	public void onSleep(PlayerSleepInBedEvent event) {
 		if (FMLCommonHandler.instance().getEffectiveSide() == Side.SERVER) {
-			PlayerContainer player = PlayerContainer.getPlayer(event.entityPlayer.getDisplayName());
+			PlayerContainer player = PlayerContainer.getPlayer(event.entityPlayer.getDisplayNameString());
 			
 			long worldTime = event.entityPlayer.worldObj.getWorldTime() % 24000;
 			float sleepingTime = (float) (24000 - worldTime);
@@ -200,7 +203,7 @@ public class EventSystem implements IGuiHandler {
 
 	@Override
 	public Object getServerGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
-		TileEntity tile = world.getTileEntity(x, y, z);
+		TileEntity tile = world.getTileEntity(new BlockPos(x, y, z));
 		switch(ID) {
 			case Constants.DRINKS_STORE_ID: 
 				return new ContainerDS(player.inventory, (TileEntityDS) tile);
@@ -214,7 +217,7 @@ public class EventSystem implements IGuiHandler {
 
 	@Override
 	public Object getClientGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
-		TileEntity tile = world.getTileEntity(x, y, z);
+		TileEntity tile = world.getTileEntity(new BlockPos(x, y, z));
 		switch(ID) {
 			case Constants.DRINKS_STORE_ID: 
 				return new GuiDS(player.inventory, (TileEntityDS) tile);
@@ -227,7 +230,7 @@ public class EventSystem implements IGuiHandler {
 	}
 	
 	public void debugCode(EntityPlayer player) {
-		PlayerContainer container = PlayerContainer.getPlayer(player.getDisplayName());
+		PlayerContainer container = PlayerContainer.getPlayer(player.getDisplayNameString());
 		if(Keyboard.isKeyDown(Keyboard.KEY_B)) {
 			container.addStats(-1, -1);
 		} else if(Keyboard.isKeyDown(Keyboard.KEY_N)) {

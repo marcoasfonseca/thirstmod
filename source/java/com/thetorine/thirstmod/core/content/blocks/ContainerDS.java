@@ -5,11 +5,11 @@ import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.ICrafting;
 import net.minecraft.inventory.Slot;
-import net.minecraft.inventory.SlotFurnace;
+import net.minecraft.inventory.SlotFurnaceOutput;
 import net.minecraft.item.ItemStack;
-import cpw.mods.fml.common.FMLCommonHandler;
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
+import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class ContainerDS extends Container {
 	private TileEntityDS tile;
@@ -23,7 +23,7 @@ public class ContainerDS extends Container {
 
 		// 0=drink, 1=coins, 2=return
 		addSlotToContainer(new SlotDS(tile, 0, 34, 28));
-		addSlotToContainer(new SlotFurnace(inv.player, tile, 1, 34, 56));
+		addSlotToContainer(new SlotFurnaceOutput(inv.player, tile, 1, 34, 56));
 		addSlotToContainer(new Slot(tile, 2, 8, 41));
 
 		int var3;
@@ -90,47 +90,33 @@ public class ContainerDS extends Container {
 		super.detectAndSendChanges();
 		for (int var1 = 0; var1 < crafters.size(); ++var1) {
 			ICrafting var2 = (ICrafting) crafters.get(var1);
-			if (lastPage != tile.page) {
-				var2.sendProgressBarUpdate(this, 0, tile.page);
+			if (lastPage != tile.getField(0)) {
+				var2.sendProgressBarUpdate(this, tile.getField(0), 0);
 			}
 
-			if (lastAmount != tile.amountToBuy) {
-				var2.sendProgressBarUpdate(this, 1, tile.amountToBuy);
+			if (lastAmount != tile.getField(1)) {
+				var2.sendProgressBarUpdate(this, tile.getField(1), 1);
 			}
 
-			if (lastBuy != tile.canBuy) {
-				var2.sendProgressBarUpdate(this, 2, tile.canBuy);
+			if (lastBuy != tile.getField(2)) {
+				var2.sendProgressBarUpdate(this, tile.getField(2), 2);
 			}
 		}
 
-		lastPage = tile.page;
-		lastAmount = tile.amountToBuy;
-		lastBuy = tile.canBuy;
+		lastPage = tile.getField(0);
+		lastAmount = tile.getField(1);
+		lastBuy = tile.getField(2);
 	}
 
 	@Override
 	@SideOnly(Side.CLIENT)
 	public void updateProgressBar(int packet, int value) {
-		super.updateProgressBar(packet, value);
-		switch (packet) {
-			case 0:
-				tile.page = value;
-				return;
-			case 1:
-				tile.amountToBuy = value;
-				return;
-			case 2:
-				tile.canBuy = value;
-				return;
-			default:
-		}
+		tile.setField(packet, value);
 	}
 
 	@Override
 	public void addCraftingToCrafters(ICrafting craft) {
 		super.addCraftingToCrafters(craft);
-		craft.sendProgressBarUpdate(this, 0, tile.page);
-		craft.sendProgressBarUpdate(this, 1, tile.amountToBuy);
-		craft.sendProgressBarUpdate(this, 2, tile.canBuy);
+		craft.func_175173_a(this, tile);
 	}
 }

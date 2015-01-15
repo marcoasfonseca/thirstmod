@@ -6,13 +6,12 @@ import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.client.FMLClientHandler;
 
 import org.lwjgl.opengl.GL11;
 
 import com.thetorine.thirstmod.core.content.blocks.ContainerRC;
 import com.thetorine.thirstmod.core.content.blocks.TileEntityRC;
-
-import cpw.mods.fml.client.FMLClientHandler;
 
 public class GuiRC extends GuiContainer {
 	private TileEntityRC rcInv;
@@ -51,7 +50,7 @@ public class GuiRC extends GuiContainer {
 			drawTexturedModalRect(x + 60, y + 51 - bucketScaled, 179, 16-bucketScaled, 8, bucketScaled);
 		}
 
-		if (world.isRaining() && rcInv.canRainOn(rcInv.xCoord, rcInv.yCoord, rcInv.zCoord, world)) {
+		if (world.isRaining() && rcInv.canRainOn(rcInv.getPos(), world)) {
 			drawTexturedModalRect(x + 55, y + 15, 176, 31, 18, 20);
 		}
 	}

@@ -2,6 +2,7 @@ package com.thetorine.thirstmod.core.content.blocks;
 
 import java.util.HashMap;
 import java.util.Map;
+
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 

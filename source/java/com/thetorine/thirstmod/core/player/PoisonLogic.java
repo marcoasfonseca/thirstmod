@@ -2,12 +2,12 @@ package com.thetorine.thirstmod.core.player;
 
 import java.util.Random;
 
-import com.thetorine.thirstmod.core.main.ThirstMod;
-
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.DamageSource;
+
+import com.thetorine.thirstmod.core.main.ThirstMod;
 
 //TODO rewrite. this is some 2012 shit.
 public class PoisonLogic {
@@ -62,7 +62,7 @@ public class PoisonLogic {
 	public void increaseExhaust(EntityPlayer player) {
 		if (shouldPoison()) {
 			poisonTimer++;
-			PlayerContainer.getPlayer(player.getDisplayName()).addExhaustion(0.061f);
+			PlayerContainer.getPlayer(player.getDisplayNameString()).addExhaustion(0.061f);
 			isPoisoned = true;
 			if (poisonTimer > 360) {
 				poisonTimer = 0;

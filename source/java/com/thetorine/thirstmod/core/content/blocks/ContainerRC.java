@@ -5,7 +5,7 @@ import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.ICrafting;
 import net.minecraft.inventory.Slot;
-import net.minecraft.inventory.SlotFurnace;
+import net.minecraft.inventory.SlotFurnaceOutput;
 import net.minecraft.item.ItemStack;
 
 public class ContainerRC extends Container {
@@ -16,7 +16,7 @@ public class ContainerRC extends Container {
 	public ContainerRC(InventoryPlayer ip, TileEntityRC tile) {
 		rc = tile;
 		addSlotToContainer(new Slot(tile, 0, 56, 53));
-		addSlotToContainer(new SlotFurnace(ip.player, tile, 1, 116, 35));
+		addSlotToContainer(new SlotFurnaceOutput(ip.player, tile, 1, 116, 35));
 
 		int i;
 		for (i = 0; i < 3; ++i) {
@@ -63,39 +63,28 @@ public class ContainerRC extends Container {
 
 		for (int var1 = 0; var1 < crafters.size(); ++var1) {
 			ICrafting var2 = (ICrafting) crafters.get(var1);
-			if (lastRainMeter != rc.rainMeter) {
-				var2.sendProgressBarUpdate(this, 0, rc.rainMeter);
+			if (lastRainMeter != rc.getField(0)) {
+				var2.sendProgressBarUpdate(this, 0, rc.getField(0));
 			}
 
-			if (lastInternalBucket != rc.internalBucket) {
-				var2.sendProgressBarUpdate(this, 1, rc.internalBucket);
+			if (lastInternalBucket != rc.getField(1)) {
+				var2.sendProgressBarUpdate(this, 1, rc.getField(1));
 			}
 		}
 
-		lastRainMeter = rc.rainMeter;
-		lastInternalBucket = rc.internalBucket;
+		lastRainMeter = rc.getField(0);
+		lastInternalBucket = rc.getField(1);
 	}
 
 	@Override
 	public void updateProgressBar(int i, int j) {
-		super.updateProgressBar(i, j);
-		switch (i) {
-			case 0:
-				rc.rainMeter = j;
-				return;
-			case 1:
-				rc.internalBucket = j;
-				return;
-			default:
-		}
+		rc.setField(i, j);
 	}
 
-	@SuppressWarnings({ "unchecked" })
 	@Override
 	public void addCraftingToCrafters(ICrafting par1ICrafting) {
-		crafters.add(par1ICrafting);
-		par1ICrafting.sendProgressBarUpdate(this, 0, this.rc.rainMeter);
-		par1ICrafting.sendProgressBarUpdate(this, 1, this.rc.internalBucket);
+		super.addCraftingToCrafters(par1ICrafting);
+		par1ICrafting.func_175173_a(this, rc);
 	}
 
 	@Override

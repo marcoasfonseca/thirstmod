@@ -2,9 +2,6 @@ package com.thetorine.thirstmod.core.client.gui;
 
 import java.util.Random;
 
-import com.thetorine.thirstmod.core.client.player.ClientStats;
-import com.thetorine.thirstmod.core.main.ThirstMod;
-
 import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
@@ -12,6 +9,9 @@ import net.minecraft.client.gui.GuiIngame;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.ForgeHooks;
+
+import com.thetorine.thirstmod.core.client.player.ClientStats;
+import com.thetorine.thirstmod.core.main.ThirstMod;
 
 public class GuiRenderBar {
 	public static Minecraft mc = Minecraft.getMinecraft();
@@ -94,29 +94,29 @@ public class GuiRenderBar {
 		GuiIngame ingameGUI = mc.ingameGUI;
 		updateCounter = ingameGUI.getUpdateCounter();
 	
-		for (int i13 = 0; i13 < 10; i13++) {
-			int width = ThirstMod.config.METER_ON_LEFT ? ((rwidth / 2) - 91) + (i13 * 8) : ((rwidth / 2) + 91) - (i13 * 8) - 9;
+		for (int i = 0; i < 10; i++) {
+			int width = ThirstMod.config.METER_ON_LEFT ? ((rwidth / 2) - 91) + (i * 8) : ((rwidth / 2) + 91) - (i * 8) - 9;
 			int height = rheight - 49;
 			int xStart = 1;
 			int yStart = 1;
 			int yEnd = 9;
 			int xEnd = 7;
 
-			if ((stats.saturation <= 0.0F) && (updateCounter % (stats.level * 3 + 1) == 0)) {
+			if (stats.saturation <= 0.0F && updateCounter % (stats.level * 3 + 1) == 0) {
 				height += rand.nextInt(3) - 1;
 			}
 			
 			ingameGUI.drawTexturedModalRect(width, height, xStart, yStart, xEnd, yEnd);
 			if(!stats.isPoisoned) {
-				if ((i13 * 2 + 1) < stats.level) {
+				if(i * 2 + 1 < stats.level) {
 					ingameGUI.drawTexturedModalRect(width, height, xStart + 8, yStart, xEnd, yEnd);
-				} else if ((i13 * 2 + 1) == stats.level) {
+				} else if(i * 2 + 1 == stats.level) {
 					ingameGUI.drawTexturedModalRect(width, height, xStart + 16, yStart, xEnd, yEnd);
 				}
 			} else {
-				if ((i13 * 2 + 1) < stats.level) {
+				if (i * 2 + 1 < stats.level) {
 					ingameGUI.drawTexturedModalRect(width, height, xStart + 24, yStart, xEnd, yEnd);
-				} else if ((i13 * 2 + 1) == stats.level) {
+				} else if (i * 2 + 1 == stats.level) {
 					ingameGUI.drawTexturedModalRect(width, height, xStart + 32, yStart, xEnd, yEnd);
 				}
 			}
@@ -127,7 +127,7 @@ public class GuiRenderBar {
     public static void drawTemperature(int w, int h) {
     	float temp = ClientStats.getInstance().temperature;
     	GuiIngame ingameGUI = mc.ingameGUI;
-    	ingameGUI.drawCenteredString(mc.fontRenderer, Float.toString(temp), 200, 100, 0xffffff);
+    	ingameGUI.drawCenteredString(mc.fontRendererObj, Float.toString(temp), 200, 100, 0xffffff);
     }
 
 	private static void bind(ResourceLocation res) {

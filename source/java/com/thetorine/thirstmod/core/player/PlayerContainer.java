@@ -3,9 +3,9 @@ package com.thetorine.thirstmod.core.player;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.thetorine.thirstmod.core.utils.Constants;
-
 import net.minecraft.entity.player.EntityPlayer;
+
+import com.thetorine.thirstmod.core.utils.Constants;
 
 public class PlayerContainer {
 	public static final Map<String, PlayerContainer> ALL_PLAYERS = new HashMap<String, PlayerContainer>();
@@ -21,7 +21,7 @@ public class PlayerContainer {
 	public static void addPlayer(EntityPlayer player) {
 		if (!ALL_PLAYERS.containsKey(player.getDisplayName())) {
 			PlayerContainer container = new PlayerContainer(player, new ThirstLogic(player));
-			ALL_PLAYERS.put(player.getDisplayName(), container);
+			ALL_PLAYERS.put(player.getDisplayNameString(), container);
 		}
 	}
 	

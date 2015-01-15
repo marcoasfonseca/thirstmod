@@ -1,13 +1,12 @@
 package com.thetorine.thirstmod.core.content.blocks;
 
-import com.thetorine.thirstmod.core.content.BlockLoader;
-
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
-import net.minecraft.inventory.IInventory;
+import net.minecraft.inventory.Container;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemHoe;
@@ -16,10 +15,13 @@ import net.minecraft.item.ItemSword;
 import net.minecraft.item.ItemTool;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
-import net.minecraft.tileentity.TileEntity;
-import cpw.mods.fml.common.registry.GameRegistry;
+import net.minecraft.server.gui.IUpdatePlayerListBox;
+import net.minecraft.tileentity.TileEntityLockable;
+import net.minecraftforge.fml.common.registry.GameRegistry;
 
-public class TileEntityDB extends TileEntity implements IInventory {
+import com.thetorine.thirstmod.core.content.BlockLoader;
+
+public class TileEntityDB extends TileEntityLockable implements IUpdatePlayerListBox {
 	// 0 = item to brew, 1 = glass bottle, 2 = fuel, 3 = return.
 	public ItemStack stacks[] = new ItemStack[4];
 	public int fuelLevel;
@@ -27,7 +29,7 @@ public class TileEntityDB extends TileEntity implements IInventory {
 	public int maxFuelLevel;
 	
 	@Override
-	public void updateEntity() {
+	public void update() {
 		if(worldObj != null) {
 			if(stacks[0] != null && stacks[1] != null && canBrew()) {
 				if(fuelLevel > 0) {
@@ -107,7 +109,7 @@ public class TileEntityDB extends TileEntity implements IInventory {
 				return 200;
 			if (item instanceof ItemSword && ((ItemSword) item).getToolMaterialName().equals("WOOD"))
 				return 200;
-			if (item instanceof ItemHoe && ((ItemHoe) item).getToolMaterialName().equals("WOOD"))
+			if (item instanceof ItemHoe && ((ItemHoe) item).getMaterialName().equals("WOOD"))
 				return 200;
 			if (item == Items.stick)
 				return 100;
@@ -212,43 +214,76 @@ public class TileEntityDB extends TileEntity implements IInventory {
 	}
 
 	@Override
-	public String getInventoryName() {
-		return BlockLoader.drinks_brewer.getUnlocalizedName();
-	}
-
-	@Override
 	public int getInventoryStackLimit() {
 		return 64;
 	}
 
 	@Override
 	public boolean isUseableByPlayer(EntityPlayer entityplayer) {
-		if (worldObj.getTileEntity(xCoord, yCoord, zCoord) != this) {
+		if (worldObj.getTileEntity(getPos()) != this) {
 			return false;
 		} else {
-			return entityplayer.getDistanceSq(xCoord + 0.5D, yCoord + 0.5D, zCoord + 0.5D) <= 64D;
+			return entityplayer.getDistanceSq(getPos().getX() + 0.5D, getPos().getY() + 0.5D, getPos().getZ() + 0.5D) <= 64D;
 		}
-	}
-
-	@Override
-	public void openInventory() {
-	}
-
-	@Override
-	public void closeInventory() {
-	}
-
-	@Override
-	public boolean hasCustomInventoryName() {
-		return false;
 	}
 
 	@Override
 	public boolean isItemValidForSlot(int i, ItemStack itemstack) {
 		return true;
 	}
-	
-	public static void addRecipe(String id, ItemStack return1) {
-		DBRecipes.instance().addRecipe(id, return1);
+
+	@Override
+	public Container createContainer(InventoryPlayer playerInventory, EntityPlayer playerIn) {
+		return new ContainerDB(playerInventory, this);
+	}
+
+	@Override
+	public String getGuiID() {
+		return BlockLoader.drinks_brewer.getUnlocalizedName();
+	}
+
+	@Override
+	public String getName() {
+		return BlockLoader.drinks_brewer.getUnlocalizedName();
+	}
+
+	@Override
+	public boolean hasCustomName() {
+		return false;
+	}
+
+	@Override
+	public void openInventory(EntityPlayer playerIn) {}
+
+	@Override
+	public void closeInventory(EntityPlayer playerIn) {}
+
+	@Override
+	public int getField(int id) {
+		switch(id) {
+			case 0: return fuelLevel;
+			case 1: return brewTime;
+			case 2: return maxFuelLevel;
+			default: return 0;
+		}
+	}
+
+	@Override
+	public void setField(int id, int value) {
+		switch(id) {
+			case 0: fuelLevel = value; break;
+			case 1: brewTime = value; break;
+			case 2: maxFuelLevel = value; break;
+		}
+	}
+
+	@Override
+	public int getFieldCount() {
+		return 3;
+	}
+
+	@Override
+	public void clear() {
+		stacks = new ItemStack[4];
 	}
 }

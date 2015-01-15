@@ -1,14 +1,14 @@
 package com.thetorine.thirstmod.core.content.blocks;
 
-import cpw.mods.fml.relauncher.Side;
-import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.ICrafting;
 import net.minecraft.inventory.Slot;
-import net.minecraft.inventory.SlotFurnace;
+import net.minecraft.inventory.SlotFurnaceOutput;
 import net.minecraft.item.ItemStack;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class ContainerDB extends Container {
 	private TileEntityDB drinksBrewer;
@@ -21,7 +21,7 @@ public class ContainerDB extends Container {
 		this.addSlotToContainer(new Slot(tile, 0, 58, 24)); // brewing item
 		this.addSlotToContainer(new Slot(tile, 1, 30, 24)); // glass
 		this.addSlotToContainer(new Slot(tile, 2, 44, 47)); // fuel
-		this.addSlotToContainer(new SlotFurnace(inv.player, tile, 3, 116, 35)); // return
+		this.addSlotToContainer(new SlotFurnaceOutput(inv.player, tile, 3, 116, 35)); // return
 		int i;
 
 		for (i = 0; i < 3; ++i) {
@@ -40,30 +40,25 @@ public class ContainerDB extends Container {
 		super.detectAndSendChanges();
 		for (int i = 0; i < this.crafters.size(); ++i) {
 			ICrafting craft = (ICrafting) this.crafters.get(i);
-			if(lastFuelLevel != drinksBrewer.fuelLevel) {
-				craft.sendProgressBarUpdate(this, drinksBrewer.fuelLevel, 0);
+			if(lastFuelLevel != drinksBrewer.getField(0)) {
+				craft.sendProgressBarUpdate(this, drinksBrewer.getField(0), 0);
 			}
-			if(lastBrewTime != drinksBrewer.brewTime) {
-				craft.sendProgressBarUpdate(this, drinksBrewer.brewTime, 1);
+			if(lastBrewTime != drinksBrewer.getField(1)) {
+				craft.sendProgressBarUpdate(this, drinksBrewer.getField(1), 1);
 			}
 			if(lastMaxFuelLevel != drinksBrewer.maxFuelLevel) {
-				craft.sendProgressBarUpdate(this, drinksBrewer.maxFuelLevel, 2);
+				craft.sendProgressBarUpdate(this, drinksBrewer.getField(2), 2);
 			}
 		}
-		lastFuelLevel = drinksBrewer.fuelLevel;
-		lastBrewTime = drinksBrewer.brewTime;
-		lastMaxFuelLevel = drinksBrewer.maxFuelLevel;
+		lastFuelLevel = drinksBrewer.getField(0);
+		lastBrewTime = drinksBrewer.getField(1);
+		lastMaxFuelLevel = drinksBrewer.getField(2);
 	}
 
 	@Override
 	@SideOnly(Side.CLIENT)
 	public void updateProgressBar(int packet, int data) {
-		//TODO figure out why the variables are switched. THIS IS ONE SERIOUS ISSUE!!!! THEY DONT GET ANY SERIOUSER THAN THIS WHEN MC DECIDES TO PLAY: I WANNA MESS UP YOUR GAME!
-		switch(data) {
-			case 0: drinksBrewer.fuelLevel = packet; break;
-			case 1: drinksBrewer.brewTime = packet; break;
-			case 2: drinksBrewer.maxFuelLevel = packet; break;
-		}
+		drinksBrewer.setField(packet, data);
 	}
 
 	@Override
@@ -103,9 +98,7 @@ public class ContainerDB extends Container {
 	@Override
 	public void addCraftingToCrafters(ICrafting craft) {
 		super.addCraftingToCrafters(craft);
-		craft.sendProgressBarUpdate(this, drinksBrewer.fuelLevel, 0);
-		craft.sendProgressBarUpdate(this, drinksBrewer.brewTime, 1);
-		craft.sendProgressBarUpdate(this, drinksBrewer.maxFuelLevel, 2);
+		craft.func_175173_a(this, drinksBrewer);
 	}
 
 	@Override

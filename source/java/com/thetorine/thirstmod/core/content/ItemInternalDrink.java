@@ -3,21 +3,22 @@ package com.thetorine.thirstmod.core.content;
 import java.util.List;
 import java.util.Random;
 
-import com.thetorine.thirstmod.core.client.player.ClientStats;
-import com.thetorine.thirstmod.core.main.ThirstMod;
-import com.thetorine.thirstmod.core.player.PlayerContainer;
-import com.thetorine.thirstmod.core.utils.Constants;
-
-import cpw.mods.fml.common.FMLCommonHandler;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.EnumAction;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.BlockPos;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.BiomeGenJungle;
+import net.minecraftforge.fml.common.FMLCommonHandler;
+
+import com.thetorine.thirstmod.core.client.player.ClientStats;
+import com.thetorine.thirstmod.core.main.ThirstMod;
+import com.thetorine.thirstmod.core.player.PlayerContainer;
+import com.thetorine.thirstmod.core.utils.Constants;
 
 public class ItemInternalDrink extends Item {
 	public boolean addItem;
@@ -47,7 +48,6 @@ public class ItemInternalDrink extends Item {
 	
 	public void register(String texture) {
 		this.setCreativeTab(ThirstMod.thirst); 
-		this.setTextureName(texture);
 	}
 	
 	@Override
@@ -56,18 +56,18 @@ public class ItemInternalDrink extends Item {
 			MovingObjectPosition mop = this.getMovingObjectPositionFromPlayer(world, player, true);
 
 			if (mop != null) {
-				int x = mop.blockX;
-				int y = mop.blockY;
-				int z = mop.blockZ;
+				int x = (int) mop.hitVec.xCoord;
+				int y = (int) mop.hitVec.yCoord;
+				int z = (int) mop.hitVec.zCoord;
 				
 				
 				if(!world.isRemote) {
-					if (world.getBlock(x, y, z) == Blocks.water) {
+					if (world.getBlockState(new BlockPos(x, y, z)).getBlock() == Blocks.water) {
 						addItem = true;
-					} else if (world.getBlock(x, y, z) == Blocks.leaves) {
+					} else if (world.getBlockState(new BlockPos(x, y, z)).getBlock() == Blocks.leaves) {
 						Random random = new Random();
-						if (world.getBiomeGenForCoords(x, z) instanceof BiomeGenJungle) {
-							world.setBlockMetadataWithNotify(x, y, z, 0, 0x02);
+						if (world.getBiomeGenForCoords(new BlockPos(x, 0, z)) instanceof BiomeGenJungle) {
+							world.setBlockToAir(new BlockPos(x, y, z));
 							if (random.nextFloat() < 0.3f) {
 								addItem = true;
 							}
@@ -93,11 +93,11 @@ public class ItemInternalDrink extends Item {
 	}
 	
 	@Override
-	public ItemStack onEaten(ItemStack stack, World world, EntityPlayer player) {
+	public ItemStack onItemUseFinish(ItemStack stack, World world, EntityPlayer player) {
 		if(!world.isRemote) {
 			stack.stackSize--;
 			
-			PlayerContainer playerCon = PlayerContainer.getPlayer(player.getDisplayName());
+			PlayerContainer playerCon = PlayerContainer.getPlayer(player.getDisplayNameString());
 			playerCon.addStats(thirstHeal, thirstSaturation);
 			if ((thirstPoison > 0) && ThirstMod.config.POISON_ON) {
 				Random rand = new Random();
@@ -127,7 +127,7 @@ public class ItemInternalDrink extends Item {
 	
 	@Override
 	public EnumAction getItemUseAction(ItemStack itemstack) {
-		return EnumAction.drink;
+		return EnumAction.DRINK;
 	}
 	
 	@Override
@@ -138,7 +138,7 @@ public class ItemInternalDrink extends Item {
 	public boolean canDrink(EntityPlayer player) {
 		switch(FMLCommonHandler.instance().getEffectiveSide()) {
 			case CLIENT: return ClientStats.getInstance().level < 20;
-			case SERVER: return PlayerContainer.getPlayer(player.getDisplayName()).stats.thirstLevel < 20;
+			case SERVER: return PlayerContainer.getPlayer(player.getDisplayNameString()).stats.thirstLevel < 20;
 		}
 		return false;
 	}

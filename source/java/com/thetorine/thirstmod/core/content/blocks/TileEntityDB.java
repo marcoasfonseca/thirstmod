@@ -20,23 +20,30 @@ import net.minecraft.tileentity.TileEntityLockable;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 
 import com.thetorine.thirstmod.core.content.BlockLoader;
+import com.thetorine.thirstmod.core.content.packs.DrinkLists;
+import com.thetorine.thirstmod.core.content.packs.DrinkLists.Drink;
 
 public class TileEntityDB extends TileEntityLockable implements IUpdatePlayerListBox {
 	// 0 = item to brew, 1 = glass bottle, 2 = fuel, 3 = return.
 	public ItemStack stacks[] = new ItemStack[4];
 	public int fuelLevel;
 	public int brewTime;
+	public int maxBrewTime;
 	public int maxFuelLevel;
 	
 	@Override
 	public void update() {
-		if(worldObj != null) {
+		if(!worldObj.isRemote) {
 			if(stacks[0] != null && stacks[1] != null && canBrew()) {
 				if(fuelLevel > 0) {
 					brewTime++;
-					if(brewTime >= 200) {
+					if(maxBrewTime <= 0) {
+						maxBrewTime = calculateMaxBrewTime();
+					}
+					if(brewTime >= maxBrewTime) {
 						createDrink(getBrewedDrink(stacks[0]));
 						brewTime = 0;
+						maxBrewTime = 0;
 					}
 				} else {
 					int tempValue = getItemFuelValue(stacks[2]);
@@ -48,6 +55,7 @@ public class TileEntityDB extends TileEntityLockable implements IUpdatePlayerLis
 				}
 			} else {
 				brewTime = 0;
+				maxBrewTime = 0;
 			}
 			
 			if(fuelLevel > 0) {
@@ -88,49 +96,47 @@ public class TileEntityDB extends TileEntityLockable implements IUpdatePlayerLis
 			return 0;
 		} else {
 			Item item = stack.getItem();
-			if (item instanceof ItemBlock
-					&& Block.getBlockFromItem(item) != Blocks.air) {
+			if (item instanceof ItemBlock && Block.getBlockFromItem(item) != Blocks.air) {
 				Block block = Block.getBlockFromItem(item);
-
 				if (block == Blocks.wooden_slab) {
 					return 150;
-				}
-
-				if (block.getMaterial() == Material.wood) {
+				} else if (block.getMaterial() == Material.wood) {
 					return 300;
-				}
-
-				if (block == Blocks.coal_block) {
+				} else if (block == Blocks.coal_block) {
 					return 16000;
 				}
 			}
 
-			if (item instanceof ItemTool && ((ItemTool) item).getToolMaterialName().equals("WOOD"))
-				return 200;
-			if (item instanceof ItemSword && ((ItemSword) item).getToolMaterialName().equals("WOOD"))
-				return 200;
-			if (item instanceof ItemHoe && ((ItemHoe) item).getMaterialName().equals("WOOD"))
-				return 200;
-			if (item == Items.stick)
-				return 100;
-			if (item == Items.coal)
-				return 1600;
-			if (item == Items.lava_bucket)
-				return 20000;
-			if (item == Item.getItemFromBlock(Blocks.sapling))
-				return 100;
-			if (item == Items.blaze_rod)
-				return 2400;
+			if (item instanceof ItemTool && ((ItemTool) item).getToolMaterialName().equals("WOOD")) return 200;
+			if (item instanceof ItemSword && ((ItemSword) item).getToolMaterialName().equals("WOOD")) return 200;
+			if (item instanceof ItemHoe && ((ItemHoe) item).getMaterialName().equals("WOOD")) return 200;
+			if (item == Items.stick) return 100;
+			if (item == Items.coal) return 1600;
+			if (item == Items.lava_bucket) return 20000;
+			if (item == Item.getItemFromBlock(Blocks.sapling)) return 100;
+			if (item == Items.blaze_rod) return 2400;
 			return GameRegistry.getFuelValue(stack);
 		}
 	}
 	
 	public int getFuelLevelScaled(int limit) {
+		if(maxFuelLevel <= 0) return 0;
 		return (fuelLevel * limit) / maxFuelLevel;
 	}
 	
 	public int getBrewTimeScaled(int limit) {
-		return (brewTime * limit) / 200;
+		return (brewTime * limit) / maxBrewTime;
+	}
+	
+	private int calculateMaxBrewTime() {
+		ItemStack brewedDrink = getBrewedDrink(stacks[0]);
+		for(Drink d : DrinkLists.LOADED_DRINKS) {
+			String itemName = brewedDrink.getUnlocalizedName();
+			if(itemName.equals(d.item.getUnlocalizedName())) {
+				return Math.max(200, d.brewTime);
+			}
+		}
+		return 0;
 	}
 
 	@Override
@@ -264,6 +270,7 @@ public class TileEntityDB extends TileEntityLockable implements IUpdatePlayerLis
 			case 0: return fuelLevel;
 			case 1: return brewTime;
 			case 2: return maxFuelLevel;
+			case 3: return maxBrewTime;
 			default: return 0;
 		}
 	}
@@ -274,12 +281,13 @@ public class TileEntityDB extends TileEntityLockable implements IUpdatePlayerLis
 			case 0: fuelLevel = value; break;
 			case 1: brewTime = value; break;
 			case 2: maxFuelLevel = value; break;
+			case 3: maxBrewTime = value; break;
 		}
 	}
 
 	@Override
 	public int getFieldCount() {
-		return 3;
+		return 4;
 	}
 
 	@Override

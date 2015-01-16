@@ -1,5 +1,7 @@
 package com.thetorine.thirstmod.core.content.blocks;
 
+import com.thetorine.thirstmod.core.content.ItemLoader;
+
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Container;
@@ -9,32 +11,25 @@ import net.minecraft.inventory.SlotFurnaceOutput;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class ContainerDS extends Container {
 	private TileEntityDS tile;
-
-	private int lastPage;
-	private int lastAmount;
-	private int lastBuy;
-
+	
 	public ContainerDS(InventoryPlayer inv, TileEntityDS tile) {
 		this.tile = tile;
 
-		// 0=drink, 1=coins, 2=return
-		addSlotToContainer(new SlotDS(tile, 0, 34, 28));
-		addSlotToContainer(new SlotFurnaceOutput(inv.player, tile, 1, 34, 56));
-		addSlotToContainer(new Slot(tile, 2, 8, 41));
+		addSlotToContainer(new SlotDS(tile, 0, 34, 28)); // drink
+		addSlotToContainer(new SlotFurnaceOutput(inv.player, tile, 1, 34, 56)); //return
+		addSlotToContainer(new Slot(tile, 2, 8, 41)); //coins
 
-		int var3;
-		for (var3 = 0; var3 < 3; ++var3) {
-			for (int var4 = 0; var4 < 9; ++var4) {
-				addSlotToContainer(new Slot(inv, var4 + (var3 * 9) + 9, 8 + (var4 * 18), 84 + (var3 * 18)));
+		for(int i = 0; i < 3; ++i) {
+			for (int j = 0; j < 9; ++j) {
+				addSlotToContainer(new Slot(inv, j + (i * 9) + 9, 8 + (j * 18), 84 + (i * 18)));
 			}
 		}
 
-		for (var3 = 0; var3 < 9; ++var3) {
-			addSlotToContainer(new Slot(inv, var3, 8 + (var3 * 18), 142));
+		for(int i = 0; i < 9; ++i) {
+			addSlotToContainer(new Slot(inv, i, 8 + (i * 18), 142));
 		}
 	}
 
@@ -61,57 +56,28 @@ public class ContainerDS extends Container {
 		super.transferStackInSlot(player, slotid);
 		ItemStack stack = null;
 		Slot slot = (Slot) inventorySlots.get(slotid);
-		if ((slot != null) && slot.getHasStack()) {
-			ItemStack stack1 = slot.getStack();
-			stack = stack1.copy();
-
-			if (slotid == 1) {
-				mergeItemStack(stack1, 3, 38, false);
-			} else if (slotid == 2) {
-				mergeItemStack(stack1, 3, 38, false);
-			} else if ((slotid > 2) && (slotid < 38)) {
-				mergeItemStack(stack1, 1, 2, false);
+		if (slot != null && slot.getHasStack()) {
+			stack = slot.getStack();
+			switch(slotid) {
+				case 0: 
+				case 1:
+				case 2: {
+					if(!this.mergeItemStack(stack, 3, inventorySlots.size(), false)) return null;
+					break;
+				}
+				default: {
+					if(stack.getUnlocalizedName().equals(ItemLoader.gold_coin.getUnlocalizedName())) {
+						if(!this.mergeItemStack(stack, 2, 3, false)) return null;
+					} else {
+						return null;
+					}
+				}
 			}
-
-			if (stack1.stackSize == 0) {
-				slot.putStack((ItemStack) null);
-			} else {
-				slot.onSlotChanged();
+			if(stack.stackSize == 0) {
+				slot.putStack(null);
 			}
-
-			if (stack1.stackSize == stack.stackSize) { return null; }
-			slot.putStack(stack1);
 		}
 		return stack;
-	}
-
-	@Override
-	public void detectAndSendChanges() {
-		super.detectAndSendChanges();
-		for (int var1 = 0; var1 < crafters.size(); ++var1) {
-			ICrafting var2 = (ICrafting) crafters.get(var1);
-			if (lastPage != tile.getField(0)) {
-				var2.sendProgressBarUpdate(this, tile.getField(0), 0);
-			}
-
-			if (lastAmount != tile.getField(1)) {
-				var2.sendProgressBarUpdate(this, tile.getField(1), 1);
-			}
-
-			if (lastBuy != tile.getField(2)) {
-				var2.sendProgressBarUpdate(this, tile.getField(2), 2);
-			}
-		}
-
-		lastPage = tile.getField(0);
-		lastAmount = tile.getField(1);
-		lastBuy = tile.getField(2);
-	}
-
-	@Override
-	@SideOnly(Side.CLIENT)
-	public void updateProgressBar(int packet, int value) {
-		tile.setField(packet, value);
 	}
 
 	@Override

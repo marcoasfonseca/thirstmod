@@ -1,7 +1,6 @@
 package com.thetorine.thirstmod.core.client.gui;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.util.ResourceLocation;
@@ -31,17 +30,13 @@ public class GuiRC extends GuiContainer {
 	}
 
 	@Override
-	protected void actionPerformed(GuiButton par1GuiButton) {
-	}
-
-	@Override
 	protected void drawGuiContainerBackgroundLayer(float f, int i, int j) {
 		World world = minecraft.theWorld;
 		GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
 		minecraft.getTextureManager().bindTexture(new ResourceLocation("thirstmod:textures/gui/waterCollector.png"));
 		int x = (width - xSize) / 2;
 		int y = (height - ySize) / 2;
-		int bucketScaled = rcInv.getInternalBucketScaled(24);
+		int bucketScaled = rcInv.getInternalBucketScaled(16);
 		int meterScaled = rcInv.getRainMeterScaled(24);
 		drawTexturedModalRect(x, y, 0, 0, xSize, ySize);
 		drawTexturedModalRect(x + 79, y + 34, 176, 16, meterScaled + 1, 17);
@@ -51,7 +46,7 @@ public class GuiRC extends GuiContainer {
 		}
 
 		if (world.isRaining() && rcInv.canRainOn(rcInv.getPos(), world)) {
-			drawTexturedModalRect(x + 55, y + 15, 176, 31, 18, 20);
+			drawTexturedModalRect(x + 55, y + 14, 176, 31, 18, 20);
 		}
 	}
 }

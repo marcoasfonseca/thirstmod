@@ -3,7 +3,6 @@ package com.thetorine.thirstmod.core.content;
 import java.util.List;
 import java.util.Random;
 
-import net.minecraft.client.resources.model.ModelBakery;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Items;
 import net.minecraft.item.EnumAction;

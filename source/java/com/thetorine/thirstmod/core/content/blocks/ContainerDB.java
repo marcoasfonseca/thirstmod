@@ -2,6 +2,7 @@ package com.thetorine.thirstmod.core.content.blocks;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
+import net.minecraft.init.Items;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.ICrafting;
 import net.minecraft.inventory.Slot;
@@ -15,6 +16,7 @@ public class ContainerDB extends Container {
 	private int lastFuelLevel;
 	private int lastBrewTime;
 	private int lastMaxFuelLevel;
+	private int lastMaxBrewTime;
 
 	public ContainerDB(InventoryPlayer inv, TileEntityDB tile) {
 		this.drinksBrewer = tile;
@@ -22,11 +24,11 @@ public class ContainerDB extends Container {
 		this.addSlotToContainer(new Slot(tile, 1, 30, 24)); // glass
 		this.addSlotToContainer(new Slot(tile, 2, 44, 47)); // fuel
 		this.addSlotToContainer(new SlotFurnaceOutput(inv.player, tile, 3, 116, 35)); // return
+		
 		int i;
-
 		for (i = 0; i < 3; ++i) {
-			for (int var4 = 0; var4 < 9; ++var4) {
-				this.addSlotToContainer(new Slot(inv, var4 + (i * 9) + 9, 8 + (var4 * 18), 84 + (i * 18)));
+			for (int j = 0; j < 9; ++j) {
+				this.addSlotToContainer(new Slot(inv, j + (i * 9) + 9, 8 + (j * 18), 84 + (i * 18)));
 			}
 		}
 
@@ -41,18 +43,22 @@ public class ContainerDB extends Container {
 		for (int i = 0; i < this.crafters.size(); ++i) {
 			ICrafting craft = (ICrafting) this.crafters.get(i);
 			if(lastFuelLevel != drinksBrewer.getField(0)) {
-				craft.sendProgressBarUpdate(this, drinksBrewer.getField(0), 0);
+				craft.sendProgressBarUpdate(this, 0, drinksBrewer.getField(0));
 			}
 			if(lastBrewTime != drinksBrewer.getField(1)) {
-				craft.sendProgressBarUpdate(this, drinksBrewer.getField(1), 1);
+				craft.sendProgressBarUpdate(this, 1, drinksBrewer.getField(1));
 			}
-			if(lastMaxFuelLevel != drinksBrewer.maxFuelLevel) {
-				craft.sendProgressBarUpdate(this, drinksBrewer.getField(2), 2);
+			if(lastMaxFuelLevel != drinksBrewer.getField(2)) {
+				craft.sendProgressBarUpdate(this, 2, drinksBrewer.getField(2));
+			}
+			if(lastMaxBrewTime != drinksBrewer.getField(3)) {
+				craft.sendProgressBarUpdate(this, 3, drinksBrewer.getField(3));
 			}
 		}
 		lastFuelLevel = drinksBrewer.getField(0);
 		lastBrewTime = drinksBrewer.getField(1);
 		lastMaxFuelLevel = drinksBrewer.getField(2);
+		lastMaxBrewTime = drinksBrewer.getField(3);
 	}
 
 	@Override
@@ -62,35 +68,35 @@ public class ContainerDB extends Container {
 	}
 
 	@Override
-	public ItemStack transferStackInSlot(EntityPlayer player, int par1) {
-		super.transferStackInSlot(player, par1);
+	public ItemStack transferStackInSlot(EntityPlayer player, int index) {
+		super.transferStackInSlot(player, index);
+		Slot slot = (Slot) this.inventorySlots.get(index);
 		ItemStack stack = null;
-		Slot i = (Slot) this.inventorySlots.get(par1);
-
-		if ((i != null) && i.getHasStack()) {
-			ItemStack var4 = i.getStack();
-			stack = var4.copy();
-			if (par1 == 2) {
-				i.onSlotChange(var4, stack);
-			} else if ((par1 != 1) && (par1 != 0) && (par1 != 3)) {
-				if (DBRecipes.instance().getBrewingResult(var4) != null) {
-					if (!this.mergeItemStack(var4, 0, 1, false)) { return null; }
-				} else if (drinksBrewer.getItemFuelValue(var4) > 0) {
-					if (!this.mergeItemStack(var4, 3, 2, false)) { return null; }
-				} else if ((par1 >= 4) && (par1 < 30)) {
-					if (!this.mergeItemStack(var4, 30, 39, false)) { return null; }
-				} 
-			} else if (!this.mergeItemStack(var4, 4, 39, false)) { return null; }
-
-			if (var4.stackSize == 0) {
-				i.putStack((ItemStack) null);
-			} else {
-				i.onSlotChanged();
+		if(slot != null && slot.getHasStack()) {
+			stack = slot.getStack();
+			switch(index) {
+				case 0:
+				case 1:
+				case 2: 
+				case 3: {
+					if(!this.mergeItemStack(stack, 4, inventorySlots.size(), false)) return null;
+					break;
+				}
+				default: {
+					if(stack.getUnlocalizedName().equals(Items.glass_bottle.getUnlocalizedName())) {
+						if(!this.mergeItemStack(stack, 1, 2, true)) return null;
+					} else if(drinksBrewer.getBrewedDrink(stack) != null) {
+						if(!this.mergeItemStack(stack, 0, 1, false)) return null;
+					} else if(drinksBrewer.getItemFuelValue(stack) > 0) {
+						if(!this.mergeItemStack(stack, 2, 3, false)) return null;
+					} else {
+						return null;
+					}
+				}
 			}
-
-			if (var4.stackSize == stack.stackSize) { return null; }
-
-			i.onPickupFromSlot(player, var4);
+			if(stack.stackSize == 0) {
+				slot.putStack(null);
+			}
 		}
 		return stack;
 	}

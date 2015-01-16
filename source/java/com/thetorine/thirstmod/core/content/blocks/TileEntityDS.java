@@ -23,7 +23,7 @@ public class TileEntityDS extends TileEntityLockable implements IUpdatePlayerLis
 	public void update() {
 		if (worldObj != null) {
 			if (!DrinkLists.LOADED_DRINKS.isEmpty()) {
-				items[0] = DrinkLists.LOADED_DRINKS.get(page).item;
+				items[0] = new ItemStack(DrinkLists.LOADED_DRINKS.get(page).item.getItem(), amountToBuy);
 				if (canBuy == 1) {
 					if ((items[2] != null) && (items[1] == null)) {
 						if (items[2].getUnlocalizedName().equals(ItemLoader.gold_coin.getUnlocalizedName())) {
@@ -163,27 +163,14 @@ public class TileEntityDS extends TileEntityLockable implements IUpdatePlayerLis
 	public void closeInventory(EntityPlayer playerIn) {}
 
 	@Override
-	public int getField(int id) {
-		switch(id) {
-			case 0: return page;
-			case 1: return amountToBuy;
-			case 2: return canBuy;
-			default: return 0;
-		}
-	}
+	public int getField(int id) { return 0; }
 
 	@Override
-	public void setField(int id, int value) {
-		switch(id) {
-			case 0: page = value; break;
-			case 1: amountToBuy = value; break;
-			case 2: canBuy = value; break;
-		}
-	}
+	public void setField(int id, int value) {}
 
 	@Override
 	public int getFieldCount() {
-		return 3;
+		return 0;
 	}
 
 	@Override

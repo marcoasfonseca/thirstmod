@@ -13,6 +13,7 @@ import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.AttackEntityEvent;
 import net.minecraftforge.event.entity.player.PlayerSleepInBedEvent;
 import net.minecraftforge.event.entity.player.PlayerUseItemEvent;
+import net.minecraftforge.event.entity.player.PlayerWakeUpEvent;
 import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.eventhandler.Event.Result;
@@ -44,6 +45,8 @@ import com.thetorine.thirstmod.core.player.PlayerContainer;
 import com.thetorine.thirstmod.core.utils.Constants;
 
 public class EventSystem implements IGuiHandler {
+	private int thirstToRemove;
+	
 	@SubscribeEvent
 	public void playerTick(PlayerTickEvent event) {
 		switch(event.side) {
@@ -162,7 +165,6 @@ public class EventSystem implements IGuiHandler {
 	public void onSleep(PlayerSleepInBedEvent event) {
 		if (FMLCommonHandler.instance().getEffectiveSide() == Side.SERVER) {
 			PlayerContainer player = PlayerContainer.getPlayer(event.entityPlayer.getDisplayNameString());
-			
 			long worldTime = event.entityPlayer.worldObj.getWorldTime() % 24000;
 			float sleepingTime = (float) (24000 - worldTime);
 			int thirstLoss = player.getStats().thirstLevel - Math.round(sleepingTime / 2000f);
@@ -171,9 +173,18 @@ public class EventSystem implements IGuiHandler {
 					player.player.addChatMessage(new ChatComponentText("You are too thirsty to sleep!"));
 					event.result = EntityPlayer.EnumStatus.OTHER_PROBLEM;
 				} else {
-					player.stats.setStats(thirstLoss, player.stats.thirstSaturation);
+					thirstToRemove = thirstLoss;
 				}
 			}
+		}
+	}
+	
+	@SubscribeEvent
+	public void wakeUp(PlayerWakeUpEvent event) {
+		if(FMLCommonHandler.instance().getEffectiveSide() == Side.SERVER) {
+			PlayerContainer player = PlayerContainer.getPlayer(event.entityPlayer.getDisplayNameString());
+			player.stats.setStats(thirstToRemove, player.stats.thirstSaturation);
+			thirstToRemove = 0;
 		}
 	}
 	

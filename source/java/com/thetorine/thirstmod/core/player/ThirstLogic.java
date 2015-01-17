@@ -87,9 +87,8 @@ public class ThirstLogic {
 				thirstExhaustion = nbt.getFloat("exhaustion");
 				thirstSaturation = nbt.getFloat("saturation");
 				timer = nbt.getInteger("timer");
-
-				poisonLogic.setPoisonedTo(nbt.getBoolean("poisoned"));
-				poisonLogic.setPoisonTime(nbt.getInteger("poisonTime"));
+				
+				poisonLogic.changeValues(nbt.getBoolean("poisoned"), nbt.getInteger("poisonTime"));
 			}
 		}
 	}
@@ -106,8 +105,8 @@ public class ThirstLogic {
 			nbt.setFloat("saturation", thirstSaturation);
 			nbt.setInteger("timer", timer);
 
-			nbt.setBoolean("poisoned", poisonLogic.isPoisoned());
-			nbt.setInteger("poisonTime", poisonLogic.poisonTimeRemain());
+			nbt.setBoolean("poisoned", poisonLogic.isPlayerPoisoned());
+			nbt.setInteger("poisonTime", poisonLogic.getPoisonTimeRemaining());
 		} 
 	}
 	

@@ -66,7 +66,7 @@ public class ItemDrink extends Item {
 			if (poisonChance > 0 && ThirstMod.config.POISON_ON) {
 				Random rand = new Random();
 				if (rand.nextFloat() < poisonChance) {
-					playerCon.getStats().poisonLogic.startPoison();
+					playerCon.getStats().poisonLogic.poisonPlayer();
 				}
 			}
 			if (curesPotion) {

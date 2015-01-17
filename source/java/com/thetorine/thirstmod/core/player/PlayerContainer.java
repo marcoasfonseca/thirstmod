@@ -30,8 +30,7 @@ public class PlayerContainer {
 		getStats().thirstExhaustion = 0f;
 		getStats().thirstSaturation = Constants.MAX_SATURATION;
 		getStats().timer = 0;
-		getStats().poisonLogic.setPoisonedTo(false);
-		getStats().poisonLogic.setPoisonTime(0);
+		getStats().poisonLogic.changeValues(false, 800);
 	}
 
 	public static PlayerContainer getPlayer(String username) {

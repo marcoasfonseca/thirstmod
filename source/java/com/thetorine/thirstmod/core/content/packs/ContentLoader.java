@@ -43,19 +43,16 @@ public class ContentLoader {
 	
 	public void parseTemplate() throws IOException {
 		BufferedReader reader = new BufferedReader(new InputStreamReader(ContentLoader.class.getResourceAsStream("/assets/thirstmod/content/template.txt")));
-		List<String> elements = new ArrayList<String>();
 		while(reader.ready()) {
-			elements.add(reader.readLine());
-		}
-		String prevCategory = "";
-		for(String s : elements) {
-			if(s.startsWith(" ")) {
+			String s = reader.readLine();
+			String prevCategory = "";
+			if (s.startsWith(" ")) {
 				String[] modifers = s.replaceFirst(" ", "").split(" ");
 				TemplateModifier c = new TemplateModifier(modifers[0], modifers[1]);
 				addValues(prevCategory, c, 0);
-			} else if(!s.contains("//")) {
+			} else if (!s.contains("//")) {
 				prevCategory = s;
-				if(s.contains("split")) {
+				if (s.contains("split")) {
 					split = s.split(" ", 2)[1];
 				}
 			}

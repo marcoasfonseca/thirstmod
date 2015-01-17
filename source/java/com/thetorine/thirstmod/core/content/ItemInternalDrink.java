@@ -3,6 +3,8 @@ package com.thetorine.thirstmod.core.content;
 import java.util.List;
 import java.util.Random;
 
+import net.minecraft.block.Block;
+import net.minecraft.block.material.Material;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
@@ -11,7 +13,9 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.MovingObjectPosition;
+import net.minecraft.util.MovingObjectPosition.MovingObjectType;
 import net.minecraft.world.World;
+import net.minecraft.world.biome.BiomeGenForest;
 import net.minecraft.world.biome.BiomeGenJungle;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 
@@ -54,37 +58,38 @@ public class ItemInternalDrink extends Item {
 	public ItemStack onItemRightClick(ItemStack stack, World world, EntityPlayer player) {
 		if(id == 0) {
 			MovingObjectPosition mop = this.getMovingObjectPositionFromPlayer(world, player, true);
-
 			if (mop != null) {
-				int x = (int) mop.hitVec.xCoord;
-				int y = (int) mop.hitVec.yCoord;
-				int z = (int) mop.hitVec.zCoord;
-				
-				
-				if(!world.isRemote) {
-					if (world.getBlockState(new BlockPos(x, y, z)).getBlock() == Blocks.water) {
-						addItem = true;
-					} else if (world.getBlockState(new BlockPos(x, y, z)).getBlock() == Blocks.leaves) {
-						Random random = new Random();
-						if (world.getBiomeGenForCoords(new BlockPos(x, 0, z)) instanceof BiomeGenJungle) {
-							world.setBlockToAir(new BlockPos(x, y, z));
-							if (random.nextFloat() < 0.3f) {
+				if(mop.typeOfHit == MovingObjectType.BLOCK) {
+					BlockPos pos = mop.func_178782_a();
+					
+					if(!world.isRemote) {
+						Block b = world.getBlockState(pos).getBlock();
+						if(b != null) {
+							if (b.getMaterial() == Material.water) {
 								addItem = true;
+							} else if (b == Blocks.leaves) {
+								Random random = new Random();
+								if (world.getBiomeGenForCoords(new BlockPos(pos)) instanceof BiomeGenJungle) {
+									world.setBlockToAir(new BlockPos(pos));
+									if (random.nextFloat() < 0.3f) {
+										addItem = true;
+									}
+								}
+							}
+						}
+						
+						if(addItem) {
+							--stack.stackSize;
+							if (!player.inventory.addItemStackToInventory(new ItemStack(ItemLoader.water_cup))) {
+								world.spawnEntityInWorld(new EntityItem(world, player.posX, player.posY, player.posZ, new ItemStack(ItemLoader.water_cup)));
+							}
+							if (stack.stackSize <= 0) {
+								return stack;
 							}
 						}
 					}
-					
-					if(addItem) {
-						 --stack.stackSize;
-						 if(stack.stackSize <= 0) {
-							 return new ItemStack(returnItem);
-						 }
-						 if(!player.inventory.addItemStackToInventory(new ItemStack(returnItem))) {
-							 world.spawnEntityInWorld(new EntityItem(world, player.posX, player.posY, player.posZ, new ItemStack(ItemLoader.water_cup)));
-				         }
-					}
+					addItem = false;
 				}
-				addItem = false;
 			}
 		} else if(canDrink(player) || player.capabilities.isCreativeMode) {
 			player.setItemInUse(stack, getMaxItemUseDuration(stack));
@@ -102,7 +107,7 @@ public class ItemInternalDrink extends Item {
 			if ((thirstPoison > 0) && ThirstMod.config.POISON_ON) {
 				Random rand = new Random();
 				if (rand.nextFloat() < thirstPoison) {
-					playerCon.getStats().poisonLogic.startPoison();
+					playerCon.getStats().poisonLogic.poisonPlayer();
 				}
 			}
 			player.inventory.addItemStackToInventory(new ItemStack(returnItem));

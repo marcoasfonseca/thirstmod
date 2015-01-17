@@ -22,7 +22,7 @@ public class PacketUpdateClient implements IMessage {
 	public PacketUpdateClient(ThirstLogic stats) {
 		this.level = stats.thirstLevel;
 		this.saturation = stats.thirstSaturation;
-		this.poisoned = stats.poisonLogic.isPoisoned();
+		this.poisoned = stats.poisonLogic.isPlayerPoisoned();
 		
 		if(Constants.ECLIPSE_ENVIRONMENT) {
 			this.temperature = stats.temperature.airTemperture;

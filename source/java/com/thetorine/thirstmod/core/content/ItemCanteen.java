@@ -30,6 +30,7 @@ public class ItemCanteen extends Item {
 		setHasSubtypes(true);
 		setCreativeTab(ThirstMod.thirst);
 		
+		//add modelid for each subtype of this item.
 		String[] names = new String[canteenNames.length];
 		for(int i = 0; i < names.length; i++) {
 			names[i] = "thirstmod:canteen";
@@ -58,7 +59,7 @@ public class ItemCanteen extends Item {
 			if (itemstack.getItemDamage() > 0) {
 				playerT.getStats().addStats((itemstack.getItemDamage() < 6 ? 2 : 3), 1.2F);
 				if ((itemstack.getItemDamage() <= 5) && (world.rand.nextFloat() < 0.4f)) {
-					PlayerContainer.getPlayer(player.getDisplayNameString()).getStats().poisonLogic.startPoison();
+					PlayerContainer.getPlayer(player.getDisplayNameString()).getStats().poisonLogic.poisonPlayer();
 				}
 				return new ItemStack(this, 1, getDecrementedDamage(itemstack.getItemDamage()));
 			}
@@ -98,21 +99,17 @@ public class ItemCanteen extends Item {
 		PlayerContainer playerT = PlayerContainer.getPlayer(player.getDisplayNameString());
 		MovingObjectPosition movingobjectposition = getMovingObjectPositionFromPlayer(world, player, true);
 		if (movingobjectposition == null) {
-			if ((itemstack.getItemDamage() > 0) && canDrink(player.getDisplayNameString())) {
+			if (itemstack.getItemDamage() > 0 && canDrink(player.getDisplayNameString())) {
 				player.setItemInUse(itemstack, getMaxItemUseDuration(itemstack));
 			}
 			return itemstack;
 		}
 		if (movingobjectposition.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
-			int i = (int) movingobjectposition.hitVec.xCoord;
-			int j = (int) movingobjectposition.hitVec.yCoord;
-			int k = (int) movingobjectposition.hitVec.zCoord;
-			if(FMLCommonHandler.instance().getEffectiveSide() == Side.SERVER) {
-				if (world.getBlockState(new BlockPos(i, j, k)).getBlock().getMaterial() == Material.water) {
-					if (itemstack.getItemDamage() < 5) { return new ItemStack(this, 1, 5); }
-				} else if ((itemstack.getItemDamage() > 0) && (playerT.getStats().thirstLevel < 20)) {
-					player.setItemInUse(itemstack, getMaxItemUseDuration(itemstack));
-				}
+			BlockPos pos = movingobjectposition.func_178782_a();
+			if (world.getBlockState(pos).getBlock().getMaterial() == Material.water) {
+				if (itemstack.getItemDamage() < 5) { return new ItemStack(this, 1, 5); }
+			} else if (itemstack.getItemDamage() > 0 && playerT.getStats().thirstLevel < 20) {
+				player.setItemInUse(itemstack, getMaxItemUseDuration(itemstack));
 			}
 		}
 		return itemstack;
